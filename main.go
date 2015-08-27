@@ -50,9 +50,9 @@ func main() {
 	dryRun := flag.Bool("dryRun", false, "If true, data won't be deleted")
 
 	flag.Parse()
+	log.SetOutput(os.Stdout)
 
 	slackNotification = !*dryRun
-
 	if len(flag.Args()) < 1 {
 		log.Println("Usage: popular-backup -u=root -p=password targetDay(e.g 2015-08-26)")
 		os.Exit(1)
