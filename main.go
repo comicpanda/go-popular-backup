@@ -106,7 +106,7 @@ func main() {
 
 		// Delete data.
 		if !*dryRun {
-			stmt, err := db.Prepare("DELETE FROM popular WHERE created_date between ? and ?")
+			stmt, err := db.Prepare("DELETE FROM " + *table + " WHERE created_date between ? and ?")
 			isError(err)
 
 			res, err := stmt.Exec(start, end)
