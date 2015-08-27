@@ -2,8 +2,8 @@
 utils
 
 ```
-usage : popular-backup [-dryRun=true|false] targetDay
+usage : popular-backup -u=username -p=password [-dryRun=true|false] targetDay
 
-$popular-backup -h
-$popular-backup 2015-08-26
+$go-popular-backup -h
+$go-popular-backup -u=root -p=password 2015-08-26
 ```
