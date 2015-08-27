@@ -61,7 +61,7 @@ func main() {
 	targetDay := flag.Args()[0]
 	start = targetDay + " 00:00:00"
 	end = targetDay + " 23:59:59"
-	filename = fmt.Sprintf("%s/popular.%s.json.log", baseDir, targetDay)
+	filename = fmt.Sprintf("%s/popular.%s.json.log", *baseDir, targetDay)
 
 	log.Printf("[%s] Start with %s target day.\n", targetDay, targetDay)
 
