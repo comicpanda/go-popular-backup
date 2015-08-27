@@ -8,6 +8,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"math"
+	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -20,7 +22,14 @@ type Popular struct {
 	CreatedDate time.Time `json:"createdDate"`
 }
 
+type SlackPayload struct {
+	Text      string `json:"text"`
+	Username  string `json:"username"`
+	IconEmoji string `json:"icon_emoji"`
+}
+
 const PerPage int = 10000
+const SlackAPIUrl string = "https://hooks.slack.com/services/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"
 
 func main() {
 	var (
@@ -106,7 +115,19 @@ func main() {
 
 func isError(err error) {
 	if err != nil {
+		notifyToSlack(err.Error())
 		log.Fatal(err)
-		panic(err.Error())
 	}
+}
+
+func notifyToSlack(msg string) {
+	payload := SlackPayload{Text: msg, Username: "I'm Popular Backup Bot", IconEmoji: ":construction_worker:"}
+	j, _ := json.Marshal(payload)
+	data := url.Values{}
+	data.Set("payload", string(j))
+
+	fmt.Println(string(j))
+
+	resp, _ := http.PostForm(SlackAPIUrl, data)
+	defer resp.Body.Close()
 }
