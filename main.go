@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"math"
 	"net/http"
 	"net/url"
 	"os"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type Popular struct {
@@ -43,6 +44,8 @@ func main() {
 		pageNum      int = 0
 	)
 
+	hostForReading := flag.String("rh", "localhost", "host for reading")
+	hostForDeleting := flag.String("dh", "localhost", "host for deleting")
 	baseDir := flag.String("baseDir", "~", "base dir(without last /) e.g. /backup")
 	table := flag.String("table", "popular", "Popular table name")
 	username := flag.String("u", "root", "username")
@@ -65,7 +68,7 @@ func main() {
 
 	log.Printf("[%s] Start with %s target day.\n", targetDay, targetDay)
 
-	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@/comicpanda?parseTime=true", *username, *password))
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:3306)/comicpanda?parseTime=true", *username, *password, *hostForReading))
 	isError(err)
 	defer db.Close()
 
@@ -74,7 +77,7 @@ func main() {
 
 	log.Printf("[%s] %d rows affected.\n", targetDay, totalCount)
 
-	if totalCount > 0 {
+	if totalCount > 0 && !*dryRun {
 		totalPageNum = int(math.Ceil(float64(totalCount) / float64(PerPage)))
 
 		f, err := os.Create(filename)
@@ -106,7 +109,11 @@ func main() {
 
 		// Delete data.
 		if !*dryRun {
-			stmt, err := db.Prepare("DELETE FROM " + *table + " WHERE created_date between ? and ?")
+			dbForDeleting, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:3306)/comicpanda?parseTime=true", *username, *password, *hostForDeleting))
+			defer dbForDeleting.Close()
+			isError(err)
+
+			stmt, err := dbForDeleting.Prepare("DELETE FROM " + *table + " WHERE created_date between ? and ?")
 			isError(err)
 
 			res, err := stmt.Exec(start, end)
@@ -134,6 +141,9 @@ func notifyToSlack(msg string) {
 	j, _ := json.Marshal(payload)
 	data := url.Values{}
 	data.Set("payload", string(j))
-	resp, _ := http.PostForm(SlackAPIUrl, data)
+	resp, err := http.PostForm(SlackAPIUrl, data)
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer resp.Body.Close()
 }
